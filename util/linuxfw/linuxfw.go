@@ -104,8 +104,8 @@ func getTailscaleSubnetRouteMark() []byte {
 	return nativeEndianUint32(subnetRouteMarkNum)
 }
 
-// nativeEndianUint32 returns v as a 4-byte slice in the host's native byte order.
-func nativeEndianUint32(v uint32) []byte {
+ // nativeEndianUint32 returns v as a 4-byte slice in the host's native byte order.
+ func nativeEndianUint32(v uint32) []byte {
 	b := make([]byte, 4)
 	binary.NativeEndian.PutUint32(b, v)
 	return b
