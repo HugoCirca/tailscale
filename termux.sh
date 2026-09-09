@@ -79,11 +79,16 @@ echo "  tailscaled running (log: /tmp/tailscaled.log)"
 
 echo "[5/5] Bringing up tailscale..."
 if [ -n "$AUTHKEY" ]; then
+  echo "  Using authkey..."
   "$BIN_DIR/tailscale" --socket="$SOCK" up --authkey="$AUTHKEY" $SSH $HOSTNAME
 else
-  echo "  Run: tailscale --socket=$SOCK up --ssh --authkey=tskey-..."
-  echo "  Or re-run: bash termux.sh --authkey tskey-..."
-  "$BIN_DIR/tailscale" --socket="$SOCK" status 2>&1 | head -n 20 || true
+  echo "  No authkey — starting interactive login (device link)..."
+  echo "  Visit the URL below on any browser to authenticate:"
+  echo ""
+  # This will print: To authenticate, visit: https://login.tailscale.com/a/XXXX
+  "$BIN_DIR/tailscale" --socket="$SOCK" up $SSH $HOSTNAME
+  echo ""
+  echo "  Waiting for login... (re-run 'tailscale --socket=$SOCK status' to check)"
 fi
 
 echo ""
