@@ -1,10 +1,54 @@
-# Tailscale
+# Tailscale — Android CLI (HugoCirca fork)
 
 https://tailscale.com
 
-Private WireGuard® networks made easy
+Private WireGuard® networks made easy — **Android `tailscaled`/`tailscale` CLI for Termux/shell with `--ssh`**
 
-## Overview
+> **Fork notice:** This is a modified fork of https://github.com/tailscale/tailscale, maintained by [HugoCirca](https://github.com/HugoCirca/tailscale) for Android CLI use. Not affiliated with or endorsed by Tailscale Inc. Original code is Copyright (c) 2020 Tailscale Inc & contributors, licensed under [BSD 3-Clause](LICENSE). This fork retains the original license and adds Android-specific build changes.
+
+## Android Quick Start (Termux)
+
+One-liner installer (downloads `tailscale`/`tailscaled` for your arch and starts `tailscaled` with userspace networking):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/HugoCirca/tailscale/1.102.3-android-dev/termux.sh | bash
+# with authkey:
+bash termux.sh --authkey tskey-auth-... --ssh --hostname my-phone
+# interactive device login (no authkey):
+bash termux.sh
+# -> To authenticate, visit: https://login.tailscale.com/a/...
+```
+
+After install:
+```bash
+tailscale --socket=/data/data/com.termux/files/usr/var/run/tailscale/tailscaled.sock status
+tailscale --socket=$PREFIX/var/run/tailscale/tailscaled.sock ip -4
+cat /tmp/tailscaled.log
+```
+
+`termux.sh` details: installs to `$PREFIX/bin`, state in `$PREFIX/var/lib/tailscale`, socket in `$PREFIX/var/run/tailscale/tailscaled.sock`, uses `tailscale up --ssh` by default, supports `--authkey`, `--no-ssh`, `--hostname`.
+
+Releases: https://github.com/HugoCirca/tailscale/releases — tags are plain `v1.102.3` to match upstream `tailscale/tailscale` (legacy `v1.102.3-android` still supported). Assets are `tailscale_1.102.3_arm64.tgz` / `tailscale_1.102.3_arm.tgz` (`VERSION_SHORT`).
+
+## Building for Android
+
+Requires Go 1.26 and Android NDK r27c (handled by workflow). Local:
+
+```bash
+# check
+./scripts/android.sh check arm64
+# build
+./scripts/android.sh build --upx arm64
+./scripts/android.sh build --upx arm
+# outputs: dist/tailscaled.arm64, dist/tailscaled.arm
+# versioning
+./build_dist.sh shellvars  # -> VERSION_SHORT, VERSION_LONG
+tar -czf dist/tailscale_${VERSION_SHORT}_arm64.tgz -C dist --transform='s/tailscaled.arm64/tailscaled/' tailscaled.arm64
+```
+
+Workflow `.github/workflows/build_android.yml` builds on tag `v*` (and legacy `v*-android`), uploads `tailscale_${VERSION_SHORT}_*.tgz` and creates GitHub Release.
+
+## Overview (upstream)
 
 This repository contains the majority of Tailscale's open source code.
 Notably, it includes the `tailscaled` daemon and
@@ -35,7 +79,7 @@ use the code in this repository but additionally include small GUI
 wrappers. The GUI wrappers on non-open source platforms are themselves
 not open source.
 
-## Building
+## Building (generic)
 
 We always require the latest Go release, currently Go 1.26. (While we build
 releases with our [Go fork](https://github.com/tailscale/go/), its use is not
@@ -59,8 +103,7 @@ distro's way, so that bug reports contain useful version information.
 
 ## Bugs
 
-Please file any issues about this code or the hosted service on
-[the issue tracker](https://github.com/tailscale/tailscale/issues).
+Please file any issues about this fork on [HugoCirca/tailscale issues](https://github.com/HugoCirca/tailscale/issues). Upstream issues at [tailscale/tailscale issues](https://github.com/tailscale/tailscale/issues).
 
 ## Contributing
 
@@ -82,6 +125,10 @@ see:
 * https://github.com/tailscale/tailscale/graphs/contributors
 * https://github.com/tailscale/tailscale-android/graphs/contributors
 
+Fork maintained by [Synac](https://github.com/SynacNipo) / HugoCirca.
+
 ## Legal
 
 WireGuard is a registered trademark of Jason A. Donenfeld.
+
+Original code Copyright (c) 2020 Tailscale Inc & contributors, BSD 3-Clause - see [LICENSE](LICENSE).
