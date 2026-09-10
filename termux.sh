@@ -39,7 +39,9 @@ command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock || true
 echo "[2/5] Downloading $TAG ($GOARCH)..."
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
-URL="https://github.com/$REPO/releases/download/$TAG/tailscale_${TAG#v}_${GOARCH}.tgz"
+VER="${TAG#v}"
+VER="${VER%%-*}"
+URL="https://github.com/$REPO/releases/download/$TAG/tailscale_${VER}_${GOARCH}.tgz"
 echo "  -> $URL"
 if command -v curl >/dev/null 2>&1; then
   curl -fL "$URL" -o "$TMPDIR/ts.tgz"
