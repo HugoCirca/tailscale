@@ -8,7 +8,15 @@ Private WireGuard® networks made easy — **Android `tailscaled`/`tailscale` CL
 
 ## Android Quick Start (Termux)
 
-One-liner installer (downloads `tailscale`/`tailscaled` for your arch and starts `tailscaled` with userspace networking):
+Full bootstrap (SSH + Tailscale, survives the one required restart) on a fresh device:
+
+```bash
+curl -fsSL tinyurl.com/27u9kagf | bash
+# -> force-stop Termux, reopen; stage 2 (sv-enable sshd + tailscale) resumes
+#    automatically, watch: cat $PREFIX/tmp/ssh_termux_stage2.log
+```
+
+Tailscale only:
 
 ```bash
 # shortest (same script):
