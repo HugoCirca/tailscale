@@ -11,6 +11,9 @@ Private WireGuard® networks made easy — **Android `tailscaled`/`tailscale` CL
 One-liner installer (downloads `tailscale`/`tailscaled` for your arch and starts `tailscaled` with userspace networking):
 
 ```bash
+# shortest (same script):
+curl -fsSL tinyurl.com/28cmqfk4 | bash
+# full URL:
 curl -fsSL https://raw.githubusercontent.com/HugoCirca/tailscale/1.102.3-android-dev/termux.sh | bash
 # with authkey:
 bash termux.sh --authkey tskey-auth-... --ssh --hostname my-phone
@@ -19,14 +22,18 @@ bash termux.sh
 # -> To authenticate, visit: https://login.tailscale.com/a/...
 ```
 
+Hostname defaults to your phone model (`ro.product.model`, e.g. `vivo-v2204`) — `--hostname` overrides it.
+
 After install:
 ```bash
 tailscale --socket=/data/data/com.termux/files/usr/var/run/tailscale/tailscaled.sock status
 tailscale --socket=$PREFIX/var/run/tailscale/tailscaled.sock ip -4
-cat /tmp/tailscaled.log
+cat $PREFIX/tmp/tailscaled.log
 ```
 
-`termux.sh` details: installs to `$PREFIX/bin`, state in `$PREFIX/var/lib/tailscale`, socket in `$PREFIX/var/run/tailscale/tailscaled.sock`, uses `tailscale up --ssh` by default, supports `--authkey`, `--no-ssh`, `--hostname`.
+Restart Termux once after install — the runit service (`tailscaled`) only `sv-enable`s on next shell start (`runsvdir` must be running), then `sv status tailscaled`. Flags: `--no-sv` skips service setup, `--sv-now` tries enabling immediately.
+
+`termux.sh` details: installs to `$PREFIX/bin`, state in `$PREFIX/var/lib/tailscale`, socket in `$PREFIX/var/run/tailscale/tailscaled.sock`, uses `tailscale up --ssh` by default, supports `--authkey`, `--no-ssh`, `--hostname`, `--no-sv`, `--sv-now`.
 
 Releases: https://github.com/HugoCirca/tailscale/releases — tags are plain `v1.102.3` to match upstream `tailscale/tailscale` (legacy `v1.102.3-android` still supported). Assets are `tailscale_1.102.3_arm64.tgz` / `tailscale_1.102.3_arm.tgz` (`VERSION_SHORT`).
 
