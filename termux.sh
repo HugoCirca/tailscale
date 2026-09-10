@@ -2,6 +2,7 @@
 # HugoCirca/tailscale Termux auto-installer for android CLI
 # Usage: curl -fsSL https://raw.githubusercontent.com/HugoCirca/tailscale/1.102.3-android-dev/termux.sh | bash
 # or: bash termux.sh [--authkey tskey-...] [--ssh] [--hostname my-phone] [--no-sv] [--sv-now]
+# Default hostname comes from ro.product.model (e.g. vivo-v2204).
 # Default sets up the runit service files but only sv-enables after a Termux
 # restart (runsvdir must be running; otherwise `sv up` fails like sshd did).
 set -euo pipefail
@@ -38,8 +39,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Default hostname: phone model (e.g. vivo V2204 -> vivo-v2204).
+# /tmp does not exist on Termux, logs live under $PREFIX/tmp.
+if [ -z "$HOSTNAME" ] && command -v getprop >/dev/null 2>&1; then
+  MODEL="$(getprop ro.product.model 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | sed 's/^-\+//;s/-\+$//;s/--\+/-/g')"
+  if [ -n "$MODEL" ]; then
+    HOSTNAME="--hostname=$MODEL"
+    echo "  hostname: $MODEL (from ro.product.model)"
+  fi
+fi
+LOG_FILE="$PREFIX/tmp/tailscaled.log"
+
 echo "[1/6] Preparing dirs..."
-mkdir -p "$BIN_DIR" "$STATE_DIR" "$SOCK_DIR"
+mkdir -p "$BIN_DIR" "$STATE_DIR" "$SOCK_DIR" "$PREFIX/tmp"
 command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock || true
 
 echo "[2/6] Downloading $TAG ($GOARCH)..."
@@ -115,14 +127,14 @@ echo "[5/6] Starting tailscaled (nohup, until restart hands it to runsv)..."
 pkill tailscaled 2>/dev/null || true
 sleep 1
 # default is tailscale0,userspace-networking on android - no flag needed, works rooted or not
-nohup "$BIN_DIR/tailscaled" --state="$STATE_DIR/tailscaled.state" --socket="$SOCK" > /tmp/tailscaled.log 2>&1 &
+nohup "$BIN_DIR/tailscaled" --state="$STATE_DIR/tailscaled.state" --socket="$SOCK" > "$LOG_FILE" 2>&1 &
 sleep 2
 if ! pgrep -f tailscaled >/dev/null 2>&1 && ! pidof tailscaled >/dev/null 2>&1; then
   echo "tailscaled failed to start, log:"
-  cat /tmp/tailscaled.log 2>/dev/null | head -n 50
+  cat "$LOG_FILE" 2>/dev/null | head -n 50
   exit 1
 fi
-echo "  tailscaled running (log: /tmp/tailscaled.log)"
+echo "  tailscaled running (log: $LOG_FILE)"
 
 echo "[6/6] Bringing up tailscale..."
 if [ -n "$AUTHKEY" ]; then
@@ -142,5 +154,5 @@ echo ""
 echo "Done. Useful:"
 echo "  tailscale --socket=$SOCK status"
 echo "  tailscale --socket=$SOCK ip -4"
-echo "  logcat | grep tailscale  # or cat /tmp/tailscaled.log"
+echo "  logcat | grep tailscale  # or cat $PREFIX/tmp/tailscaled.log"
 echo "  After Termux restart: sv status tailscaled"
